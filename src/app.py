@@ -15,7 +15,7 @@ class ScreenCaptureApp:
 
         # Slack 相关配置
         self.slack_token = SLACK_TOKEN  # 替换为你的 Slack API Token
-        self.slack_channel = "#全体"  # 替换为你的 Slack 频道
+        self.slack_channel = "全体"  # 替换为你的 Slack 频道
 
         # 创建按钮
         self.start_button = tk.Button(root, text="开始监控", command=self.start_monitoring)
@@ -55,10 +55,22 @@ class ScreenCaptureApp:
         """
         # 将截图发送到 Slack 频道
         client = WebClient(token=self.slack_token)
+        conversations_list = client.conversations_list()
+        # 遍历响应中的频道信息
+        for channel in conversations_list["channels"]:
+            channel_id = channel["id"]
+            channel_name = channel["name"]
+            channel_is_private = channel["is_private"]
+
+            # 打印频道信息
+            print(
+                f"Channel ID: {channel_id}, Name: {channel_name}, Private: {channel_is_private}"
+            )
 
         try:
             response = client.files_upload_v2(
-                channel=self.slack_channel,
+                channel="C03ED3E18FL",  # 替换为你的频道 ID
+                # channel=self.slack_channel,
                 file=image_path,
                 initial_comment="Difference detected!",
             )
