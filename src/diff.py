@@ -13,6 +13,11 @@ def load_image(image_path):
     return cv2.imread(image_path)
 
 
+def cp_image_path(src: str, dst: str):
+    src_image = load_image(src)
+    cv2.imwrite(dst, src_image)
+
+
 def remove_similar_part(current_image: MatLike, similar_mask: MatLike):
     # Invert the mask (if necessary) so the similar part is black (0)
     inverted_mask = cv2.bitwise_not(similar_mask)

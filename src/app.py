@@ -3,13 +3,11 @@ import tempfile
 import time
 import tkinter as tk
 from PIL import ImageGrab
-import cv2
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
 from capture import capture_area, select_area
 
 from config import SLACK_TOKEN
-from diff import compare, load_image
+from diff import compare, cp_image_path, load_image
+from forward import SlackForward
 from utils import ImagePathGenerator
 
 
@@ -51,42 +49,12 @@ class ScreenCaptureApp:
         # 返回选取的区域坐标 (x, y, width, height)
         return (0, 0, 800, 600)  # 示例，整个屏幕
 
-    def send_image_to_slack(self, image_path):
-        """
-        将截图发送到 Slack 频道。
-
-        Parameters:
-            - image_path: str, 截图文件的路径。
-        """
-        # 将截图发送到 Slack 频道
-        client = WebClient(token=self.slack_token)
-        conversations_list = client.conversations_list()
-        # 遍历响应中的频道信息
-        for channel in conversations_list["channels"]:
-            channel_id = channel["id"]
-            channel_name = channel["name"]
-            channel_is_private = channel["is_private"]
-
-            # 打印频道信息
-            print(
-                f"Channel ID: {channel_id}, Name: {channel_name}, Private: {channel_is_private}"
-            )
-
-        try:
-            response = client.files_upload_v2(
-                channel="C03ED3E18FL",  # 替换为你的频道 ID
-                # channel=self.slack_channel,
-                file=image_path,
-                initial_comment="Difference detected!",
-            )
-            print("File uploaded successfully:", response["file"]["name"])
-        except SlackApiError as e:
-            print(f"Error uploading file to Slack: {e.response['error']}")
-
 
 def mainloop():
+    # init service
     today_id = time.strftime("%Y%m%d", time.localtime())
     image_path_generator = ImagePathGenerator(today_id)
+    slack_forward = SlackForward(SLACK_TOKEN, "C03ED3E18FL")
 
     # 第一次截图
     cur_screenshot_path = image_path_generator.get_cur_screenshot_path()
@@ -104,8 +72,11 @@ def mainloop():
             final_diff_path,
         ):
             # 将当前图片内容保存为上一次的图片内容
-            last_img = load_image(tmp_image_path)
-            cv2.imwrite(image_path_generator.get_cur_screenshot_path(), last_img)
+            cp_image_path(
+                tmp_image_path, image_path_generator.get_cur_screenshot_path()
+            )
+            # 将 diff 图片发送到 Slack 频道
+            slack_forward.send_image(final_diff_path)
 
 
 if __name__ == "__main__":
