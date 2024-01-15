@@ -5,6 +5,7 @@ import numpy as np
 from cv2.typing import MatLike
 
 from capture import capture_screen
+from utils import ImagePathGenerator
 
 
 def load_image(image_path):
@@ -70,16 +71,13 @@ def find_common_content(last_img, cur_img):
         return None
 
 
-def begin_capture():
+def begin_capture(screenshot_path: str):
     x = 1807
     y = 105
     width = 445
     height = 709
     region = (x, y, x + width, y + height)
-    capture_screen(region=region, save_path=last_screenshot_path)
-    time.sleep(1)
-    # # 第二次截图
-    capture_screen(region=region, save_path=cur_screenshot_path)
+    capture_screen(region=region, save_path=screenshot_path)
 
 
 def find_bounding_box(image: MatLike) -> Tuple[int, int, int, int]:
@@ -100,24 +98,16 @@ def find_bounding_box(image: MatLike) -> Tuple[int, int, int, int]:
 def remove_common_area(src: MatLike) -> MatLike:
     # Find bounding box of the remaining part
     x, y, w, h = find_bounding_box(src)
-
+    # 如果相同区域过小，则不进行处理
+    if w <= 2 or h <= 2:
+        return None
     # Crop the image to the bounding box
     cropped_result = src[y : y + h, x : x + w]
 
     return cropped_result
 
 
-if __name__ == "__main__":
-    # 替换为你的截图保存路径和差异图片保存路径
-    last_screenshot_path = "./tmp/last_screenshot.png"
-    cur_screenshot_path = "./tmp/cur_screenshot.png"
-    common_path = "./tmp/common.png"
-    diff_path = "./tmp/diff.png"
-    final_diff_path = "./tmp/final_diff.png"
-
-    # 第一次截图
-    # if True:
-    #     begin_capture()
+def compare(last_screenshot_path: str, cur_screenshot_path: str, final_diff_path: str):
     last_img = load_image(last_screenshot_path)
     cur_img = load_image(cur_screenshot_path)
 
@@ -125,6 +115,8 @@ if __name__ == "__main__":
     common_content, common_mask = find_common_content(last_img, cur_img)
 
     if common_content is not None:
+        # common_path = "./tmp/common.png"
+        # diff_path = "./tmp/diff.png"
         # Display the common content
         # cv2.imshow("Common Content", rest_img2_content)
         # cv2.imshow("Common Content", common_content)
@@ -134,9 +126,44 @@ if __name__ == "__main__":
         # cv2.imwrite(diff_path, diff_content)
 
         final_diff = remove_common_area(diff_content)
-        cv2.imwrite(final_diff_path, final_diff)
+        if final_diff is not None:
+            cv2.imwrite(final_diff_path, final_diff)
+            return True
+        else:
+            print("Failed to find final diff.")
 
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
     else:
         print("Failed to find common content.")
+    return False
+
+
+if __name__ == "__main__":
+    today_id = time.strftime("%Y%m%d", time.localtime())
+    # 替换为你的截图保存路径和差异图片保存路径
+
+    image_path_generator = ImagePathGenerator(today_id)
+
+    # 第一次截图
+    cur_screenshot_path = image_path_generator.get_cur_screenshot_path()
+    begin_capture(cur_screenshot_path)
+    while True:
+        time.sleep(1)
+        tmp_image_path = image_path_generator.get_tmp_screenshot_path()
+        begin_capture(tmp_image_path)
+
+        final_diff_path = image_path_generator.get_final_diff_path()
+        if compare(
+            image_path_generator.get_last_screenshot_path(),
+            tmp_image_path,
+            final_diff_path,
+        ):
+            # 将当前图片内容保存为上一次的图片内容
+            last_img = load_image(tmp_image_path)
+            cv2.imwrite(image_path_generator.get_cur_screenshot_path(), last_img)
+
+        # time.sleep(5)
+        # 如果输入任何键，则退出
+        # if cv2.waitKey(0) != -1:
+        #     break
