@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from cv2.typing import MatLike
 
-from capture import capture_screen
+from capture import capture_area
 from utils import ImagePathGenerator
 
 
@@ -71,15 +71,6 @@ def find_common_content(last_img, cur_img):
         return None
 
 
-def begin_capture(screenshot_path: str):
-    x = 1807
-    y = 105
-    width = 445
-    height = 709
-    region = (x, y, x + width, y + height)
-    capture_screen(region=region, save_path=screenshot_path)
-
-
 def find_bounding_box(image: MatLike) -> Tuple[int, int, int, int]:
     # Convert to grayscale and threshold
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -137,33 +128,3 @@ def compare(last_screenshot_path: str, cur_screenshot_path: str, final_diff_path
     else:
         print("Failed to find common content.")
     return False
-
-
-if __name__ == "__main__":
-    today_id = time.strftime("%Y%m%d", time.localtime())
-    # 替换为你的截图保存路径和差异图片保存路径
-
-    image_path_generator = ImagePathGenerator(today_id)
-
-    # 第一次截图
-    cur_screenshot_path = image_path_generator.get_cur_screenshot_path()
-    begin_capture(cur_screenshot_path)
-    while True:
-        time.sleep(1)
-        tmp_image_path = image_path_generator.get_tmp_screenshot_path()
-        begin_capture(tmp_image_path)
-
-        final_diff_path = image_path_generator.get_final_diff_path()
-        if compare(
-            image_path_generator.get_last_screenshot_path(),
-            tmp_image_path,
-            final_diff_path,
-        ):
-            # 将当前图片内容保存为上一次的图片内容
-            last_img = load_image(tmp_image_path)
-            cv2.imwrite(image_path_generator.get_cur_screenshot_path(), last_img)
-
-        # time.sleep(5)
-        # 如果输入任何键，则退出
-        # if cv2.waitKey(0) != -1:
-        #     break
