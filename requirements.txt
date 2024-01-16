@@ -1,4 +1,7 @@
+numpy==1.26.3
 opencv_python==4.8.1.78
 Pillow==10.2.0
+pyautogui==0.9.54
 PyYAML==6.0.1
 slack_sdk==3.26.2
+PyQt5==5.15.6
