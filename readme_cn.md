@@ -1,7 +1,12 @@
 ## 需要：
 1. python 3.x
-2. pip install -r ./requirements.txt
 
+
+## 用法
+1. pip install -r ./requirements.txt
+2. 修改 截图区域的坐标和大小
+3. 修改 `src/env.example.yaml` 中的 `api_token` 为slack的应用token，并重命名为 env.yaml
+4. 执行 `python src/diff.py` 进行调试
 
 监控屏幕某块区域的变化，并将变化的内容发送到Slack
 
