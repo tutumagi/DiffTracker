@@ -8,6 +8,7 @@
 3. 修改 `src/env.example.yaml` 中的 `api_token` 为slack的应用token，并重命名为 env.yaml
 4. 执行 `python src/diff.py` 进行调试
 
+## 功能
 监控屏幕某块区域的变化，并将变化的内容发送到Slack
 
 1. 定时截取屏幕上某块区域的内容
