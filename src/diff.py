@@ -109,10 +109,12 @@ def compare(last_screenshot_path: str, cur_screenshot_path: str, final_diff_path
 
     # Find common content
     common_content, common_mask = find_common_content(last_img, cur_img)
-
+    save_common = False
     if common_content is not None:
-        # common_path = "./tmp/common.png"
-        # diff_path = "./tmp/diff.png"
+        if save_common:
+            common_path = "./tmp/common.png"
+            cv2.imwrite(common_path, common_content)
+            # diff_path = "./tmp/diff.png"
         # Display the common content
         # cv2.imshow("Common Content", rest_img2_content)
         # cv2.imshow("Common Content", common_content)
@@ -123,7 +125,9 @@ def compare(last_screenshot_path: str, cur_screenshot_path: str, final_diff_path
 
         final_diff = remove_common_area(diff_content)
         if final_diff is not None:
-            cv2.imwrite(final_diff_path, final_diff)
+            # 如果 有 diff 区域，直接将最新的图片写入
+            # cv2.imwrite(final_diff_path, final_diff)
+            cv2.imwrite(final_diff_path, cur_img)
             return True
         else:
             print("Failed to find final diff.")
@@ -133,3 +137,13 @@ def compare(last_screenshot_path: str, cur_screenshot_path: str, final_diff_path
     else:
         print("Failed to find common content.")
     return False
+
+
+if __name__ == "__main__":
+    today_id = time.strftime("%Y%m%d", time.localtime())
+    image_path_generator = ImagePathGenerator(today_id)
+    compare(
+        "tmp/last_screenshot.png",
+        "tmp/cur_screenshot.png",
+        "tmp/final_diff.png",
+    )
